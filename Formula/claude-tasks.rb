@@ -13,38 +13,26 @@ class ClaudeTasks < Formula
     bin.install_symlink libexec/"bin/claude-tasks"
   end
 
-  # Runs after `brew install` AND on every version-changing `brew upgrade`.
-  # Idempotent: install.sh removes any existing symlinks before re-creating
-  # them, so an upgrade refreshes pointers to the new cellar path. We do
-  # this here so users don't have to remember a follow-up command.
-  def post_install
-    system libexec/"install.sh"
-  end
-
-  # When `brew uninstall claude-tasks` removes the cellar, the symlinks at
-  # ~/.claude/skills/* and ~/.claude/scripts/* would dangle. Tear them down
-  # cleanly. tasks.json files in user repos and ~/.claude/active-repos.yaml
-  # are preserved (uninstall.sh only touches symlinks and hook entries).
-  def post_uninstall
-    if (libexec/"uninstall.sh").exist?
-      system libexec/"uninstall.sh"
-    end
-  end
+  # No post_install: Homebrew's macOS sandbox forbids writes to ~/.claude
+  # during install/upgrade. The claude-tasks binary auto-wires on its
+  # next invocation if symlinks don't point at the current cellar - so
+  # `claude-tasks status` (or any other command) right after install
+  # finishes the setup. Ditto on `brew upgrade`.
 
   def caveats
     <<~EOS
-      claude-tasks is wired in:
-        - skills      ~/.claude/skills/{tasks-sync,standup}
-        - scripts     ~/.claude/scripts/
-        - hooks       SessionStart + SessionEnd in ~/.claude/settings.json
-        - config      ~/.claude/active-repos.yaml (stub created on first install)
+      claude-tasks auto-wires its skills, scripts, and hooks into
+      ~/.claude/ on its first invocation. To trigger now and verify:
 
-      Open a Claude Code session in any git repo and the SessionStart hook
-      will prompt to track that repo. End-of-session, run /tasks-sync to
-      capture work.
+        claude-tasks status
+
+      The same auto-wire fires after `brew upgrade claude-tasks` on the
+      next claude-tasks command (or the next Claude Code session) -
+      symlinks always point at the current cellar.
 
       Useful commands:
         claude-tasks status        what's installed
+        claude-tasks install       force-rewire (rare; auto handles it)
         claude-tasks uninstall     remove symlinks + hook entries (keeps tasks.json)
     EOS
   end
