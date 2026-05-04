@@ -13,26 +13,39 @@ class ClaudeTasks < Formula
     bin.install_symlink libexec/"bin/claude-tasks"
   end
 
+  # Runs after `brew install` AND on every version-changing `brew upgrade`.
+  # Idempotent: install.sh removes any existing symlinks before re-creating
+  # them, so an upgrade refreshes pointers to the new cellar path. We do
+  # this here so users don't have to remember a follow-up command.
+  def post_install
+    system libexec/"install.sh"
+  end
+
+  # When `brew uninstall claude-tasks` removes the cellar, the symlinks at
+  # ~/.claude/skills/* and ~/.claude/scripts/* would dangle. Tear them down
+  # cleanly. tasks.json files in user repos and ~/.claude/active-repos.yaml
+  # are preserved (uninstall.sh only touches symlinks and hook entries).
+  def post_uninstall
+    if (libexec/"uninstall.sh").exist?
+      system libexec/"uninstall.sh"
+    end
+  end
+
   def caveats
     <<~EOS
-      claude-tasks needs to wire its skills, scripts, and hooks into ~/.claude/
-      to be useful. brew installed the source and put `claude-tasks` on your
-      PATH; finish setup with:
+      claude-tasks is wired in:
+        - skills      ~/.claude/skills/{tasks-sync,standup}
+        - scripts     ~/.claude/scripts/
+        - hooks       SessionStart + SessionEnd in ~/.claude/settings.json
+        - config      ~/.claude/active-repos.yaml (stub created on first install)
 
-        claude-tasks install
+      Open a Claude Code session in any git repo and the SessionStart hook
+      will prompt to track that repo. End-of-session, run /tasks-sync to
+      capture work.
 
-      That step is interactive-safe and idempotent. It symlinks skills into
-      ~/.claude/skills/, scripts into ~/.claude/scripts/, adds SessionStart
-      and SessionEnd hooks to ~/.claude/settings.json (preserving existing
-      hooks), and seeds ~/.claude/active-repos.yaml from the example if you
-      don't already have one.
-
-      To check current state:    claude-tasks status
-      To remove (keeps tasks):   claude-tasks uninstall
-
-      After upgrading via `brew upgrade claude-tasks`, re-run
-      `claude-tasks install` to refresh symlinks pointing at the new cellar
-      path.
+      Useful commands:
+        claude-tasks status        what's installed
+        claude-tasks uninstall     remove symlinks + hook entries (keeps tasks.json)
     EOS
   end
 
