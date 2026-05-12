@@ -1,8 +1,8 @@
 class ClaudeTasks < Formula
   desc "Per-project persistent task tracking for Claude Code with cross-project prioritisation"
   homepage "https://github.com/aaronmeza/claude-tasks"
-  url "https://github.com/aaronmeza/claude-tasks/archive/refs/tags/v0.7.0.tar.gz"
-  sha256 "99bf7f0926157b0afe34e29c9e0267895684a848da53ec41067e01119a8553f9"
+  url "https://github.com/aaronmeza/claude-tasks/archive/refs/tags/v0.8.0.tar.gz"
+  sha256 "b1c77fac9ee4df3c09aac80f94d495f5da1dc64146af0c90c6007bd7effc911d"
   license "MIT"
   head "https://github.com/aaronmeza/claude-tasks.git", branch: "main"
 
@@ -38,7 +38,7 @@ class ClaudeTasks < Formula
   end
 
   test do
-    assert_match "claude-tasks 0.7.0", shell_output("#{bin}/claude-tasks version")
+    assert_match "claude-tasks 0.8.0", shell_output("#{bin}/claude-tasks version")
     assert_match "Usage: claude-tasks", shell_output("#{bin}/claude-tasks help")
   end
 end
